@@ -15,6 +15,7 @@ Mesh::Mesh() : m_ebo(QOpenGLBuffer::IndexBuffer) {
 
   m_vbo.create();
   m_ebo.create();
+
   m_vao.create();
 
   initGeometry();

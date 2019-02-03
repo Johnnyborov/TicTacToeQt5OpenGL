@@ -2,6 +2,8 @@
 
 #include <QImage>
 #include <QMouseEvent>
+#include <QKeyEvent>
+#include <QQuaternion>
 
 namespace constants {
 constexpr int max_dim = 3;
@@ -10,11 +12,13 @@ constexpr float size = 2.0f;
 constexpr float margin = 0.2f;
 constexpr float step = size + margin;
 
-constexpr float scale = 1.25f / max_dim;
+constexpr float scale = 1.15f / max_dim;
 constexpr float translation = (size * scale * max_dim / 2)+(margin * scale * (max_dim-1) / 2);
 } // namespace constants
 
 GLWidget::GLWidget(QWidget* parent) : QOpenGLWidget (parent) {
+  setFocusPolicy(Qt::FocusPolicy::StrongFocus);
+
   m_size = 9;
 }
 
@@ -44,12 +48,17 @@ void GLWidget::initializeGL() {
 
   m_program.setUniformValue("texture0", 0);
 
-  m_view.translate(0.0, 0.0, -5.0);
+  m_angle_x = 0;
+  m_angle_z = 0;
+  m_view.translate(0.0, 0.0, -4.7);
+  m_view.rotate(m_angle_x, 1.0, 0.0, 0.0);
+  m_view.translate(0.0, 0.0, -0.3);
+  m_view.rotate(m_angle_z, 0.0, 0.0, 1.0);
   m_program.setUniformValue("view", m_view);
 
   m_world.setToIdentity();
   m_world.translate(-constants::translation, constants::translation, 0);
-  m_world.scale(constants::scale, constants::scale);
+  m_world.scale(constants::scale);
 
 
   m_mesh = new Mesh();
@@ -62,7 +71,7 @@ void GLWidget::initializeGL() {
     m_squares.push_back(new Square(m_mesh, m_texture, &m_program, &m_world));
 
     local.setToIdentity();
-    local.translate(1, -1, 0);
+    local.translate(1.0, -1.0, 0);
     local.translate((i % 3) * constants::step, - (i / 3) * constants::step, 0);
 
 
@@ -81,7 +90,7 @@ void GLWidget::paintGL() {
 
 void GLWidget::resizeGL(int width, int height) {
   float aspect = float(width) / float(height ? height : 1);
-  const float zNear = 3.0, zFar = 7.0, fov = 45.0;
+  const float zNear = 1.0, zFar = 9.0, fov = 45.0;
 
   m_projection.setToIdentity();
   m_projection.perspective(fov, aspect, zNear, zFar);
@@ -97,7 +106,53 @@ void GLWidget::createProgram() {
 
 
 void GLWidget::mousePressEvent(QMouseEvent* event) {
-  qDebug() << getSquareUnderMouse(event->x(), event->y());
+  int i = getSquareUnderMouse(event->x(), event->y());
+
+  if (i == -1) return;
+
+  m_squares[i]->setPressed(true);
+  update();
+}
+
+
+void GLWidget::mouseReleaseEvent(QMouseEvent* event) {
+  int i = getSquareUnderMouse(event->x(), event->y());
+
+  if (i == -1) return;
+
+  m_squares[i]->setPressed(false);
+  update();
+}
+
+
+void GLWidget::keyPressEvent(QKeyEvent* event) {
+  if (event->key() == Qt::Key::Key_Up) {
+    m_angle_x += 5;
+  } else if (event->key() == Qt::Key::Key_Down) {
+    m_angle_x -= 5;
+  }  else if (event->key() == Qt::Key::Key_Left) {
+    m_angle_z += 5;
+  }  else if (event->key() == Qt::Key::Key_Right) {
+    m_angle_z -= 5;
+  } else {
+    QWidget::keyPressEvent(event);
+  }
+
+  if (m_angle_x > 360) m_angle_x -= 360;
+  if (m_angle_x < 0) m_angle_x += 360;
+  if (m_angle_z > 360) m_angle_z -= 360;
+  if (m_angle_z < 0) m_angle_z += 360;
+
+
+  m_view.setToIdentity();
+  m_view.translate(0.0, 0.0, -4.7);
+  m_view.rotate(m_angle_x, 1.0, 0.0, 0.0);
+  m_view.translate(0.0, 0.0, -0.3);
+  m_view.rotate(m_angle_z, 0.0, 0.0, 1.0);
+
+  m_program.bind();
+  m_program.setUniformValue("view", m_view);
+  update();
 }
 
 
@@ -107,7 +162,7 @@ int GLWidget::getSquareUnderMouse(int screen_x, int screen_y) {
   QVector3D ray_world = calculateRay(screen_x, screen_y);
 
   float x, y;
-  if (!trySetIntersectionWithPlaneXY(ray_world, 1.0f, x, y)) return -1;
+  if (!trySetIntersectionWithPlaneXY(ray_world, 1.0f * constants::scale, x, y)) return -1;
 
   int i, j;
   if (!trySetSquareIJ(x, y, i, j)) return -1;
@@ -130,15 +185,16 @@ QVector3D GLWidget::calculateRay(int screen_x, int screen_y) {
   QVector3D ray_world(m_view.inverted() * ray_eye);
   ray_world.normalize();
 
+
   return ray_world;
 }
 
 
 bool GLWidget::trySetIntersectionWithPlaneXY(QVector3D ray_world, float plane_z, float& res_x, float& res_y) {
   // find ray intersection coordinates with squares plane in world space
-  QVector3D camera(0.0f, 0.0f, 5.0f);
-  QVector3D plane_normal(0.0f, 0.0f, 1.0f);
+  QVector3D camera(m_view.inverted() * QVector3D());
 
+  QVector3D plane_normal(0.0f, 0.0f, 1.0f);
 
   float dot_plane_ray = QVector3D::dotProduct(ray_world, plane_normal);
   if (std::abs(dot_plane_ray) < 0.001f) return false; // ray parallel to plane
@@ -151,6 +207,7 @@ bool GLWidget::trySetIntersectionWithPlaneXY(QVector3D ray_world, float plane_z,
   // put top left corner of top left square in (0, 0)
   // size and margin of squares become equal to the ones defined in constexpressions
   intersection_coords = m_world.inverted() * intersection_coords;
+
   QMatrix4x4 flip_y;
   flip_y.scale(1.0, -1.0);
   intersection_coords = flip_y * intersection_coords;

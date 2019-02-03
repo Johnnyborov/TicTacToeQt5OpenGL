@@ -15,6 +15,7 @@ public:
 
   void draw();
   void setLocalTransform(QMatrix4x4 local);
+  void setPressed(bool pressed);
 private:
   Mesh* m_mesh;
   QOpenGLTexture* m_texture;
@@ -22,6 +23,7 @@ private:
 
   QMatrix4x4* m_world;
   QMatrix4x4 m_local;
+  QMatrix4x4 m_z;
 };
 
 #endif // SQUARE_H

@@ -12,6 +12,7 @@
 #include <vector>
 
 class QMouseEvent;
+class QKeyEvent;
 
 class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
   Q_OBJECT
@@ -25,7 +26,9 @@ protected:
   void paintGL() override;
   void resizeGL(int width, int height) override;
 
-  void mousePressEvent(QMouseEvent* event);
+  void mousePressEvent(QMouseEvent* event) override;
+  void mouseReleaseEvent(QMouseEvent* event) override;
+  void keyPressEvent(QKeyEvent* event) override;
 
 private:
   void createProgram();
@@ -48,6 +51,9 @@ private:
   QMatrix4x4 m_projection;
   QMatrix4x4 m_view;
   QMatrix4x4 m_world;
+
+  float m_angle_x;
+  float m_angle_z;
 };
 
 #endif // GLWIDGET_H

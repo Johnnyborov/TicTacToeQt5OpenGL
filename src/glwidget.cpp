@@ -16,14 +16,16 @@ constexpr float translation(int max_dim) {
 }
 } // namespace constants
 
+
 GLWidget::GLWidget(QWidget* parent) : QOpenGLWidget (parent) {
   setFocusPolicy(Qt::FocusPolicy::StrongFocus);
 }
 
+
 GLWidget::~GLWidget() {
   makeCurrent();
 
-  for (int i=0; i < m_dim_x * m_dim_y; ++i) {
+  for (int i=0; i < m_squares.size(); ++i) {
     delete m_squares[i];
   }
 
@@ -34,6 +36,11 @@ GLWidget::~GLWidget() {
 
   doneCurrent();
 }
+
+QSize GLWidget::minimumSizeHint() const {
+  return QSize(400, 400);
+}
+
 
 void GLWidget::initializeGL() {
   initializeOpenGLFunctions();
@@ -57,11 +64,6 @@ void GLWidget::initializeGL() {
   m_view.rotate(m_angle_z, 0.0, 0.0, 1.0);
   m_program.setUniformValue("view", m_view);
 
-  m_world.setToIdentity();
-  int max_dim = std::max((m_dim_x), (m_dim_y));
-  m_world.translate(-constants::translation(max_dim), constants::translation(max_dim), 0);
-  m_world.scale(constants::scale(max_dim));
-
 
   m_mesh = new Mesh();
   m_textures.push_back(new QOpenGLTexture(QImage(":/textures/box.png").mirrored()));
@@ -69,19 +71,9 @@ void GLWidget::initializeGL() {
   m_textures.push_back(new QOpenGLTexture(QImage(":/textures/cross.png").mirrored()));
   m_textures.push_back(new QOpenGLTexture(QImage(":/textures/nought.png").mirrored()));
 
-  m_squares.reserve(m_dim_x * m_dim_y);
-  QMatrix4x4 local;
-  for (int i=0; i < m_dim_x * m_dim_y; ++i) {
-    m_squares.push_back(new Square(m_mesh, m_textures, &m_program, &m_world));
-
-    local.setToIdentity();
-    local.translate(1.0, -1.0, 0);
-    local.translate((i % 3) * constants::step, - (i / 3) * constants::step, 0);
-
-
-    m_squares[i]->setLocalTransform(local);
-  }
+  newGame(3, 3, 3);
 }
+
 
 void GLWidget::paintGL() {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -92,20 +84,59 @@ void GLWidget::paintGL() {
   }
 }
 
+
 void GLWidget::resizeGL(int width, int height) {
   float aspect = float(width) / float(height ? height : 1);
-  const float zNear = 1.0, zFar = 9.0, fov = 45.0;
+  const float zNear = 1.0, zFar = 9.0;
 
   m_projection.setToIdentity();
-  m_projection.perspective(fov, aspect, zNear, zFar);
+  m_projection.perspective(m_fov, aspect, zNear, zFar);
 
   m_program.setUniformValue("projection", m_projection);
 }
+
 
 void GLWidget::createProgram() {
   m_program.addShaderFromSourceFile(QOpenGLShader::Vertex, ":/shaders/vshader.glsl");
   m_program.addShaderFromSourceFile(QOpenGLShader::Fragment, ":/shaders/fshader.glsl");
   m_program.link();
+}
+
+
+void GLWidget::newGame(int dim_x, int dim_y, int win_size) {
+  for (int i=0; i < m_squares.size(); ++i) {
+    delete m_squares[i];
+  }
+  m_squares.clear();
+
+  m_dim_x = dim_x;
+  m_dim_y = dim_y;
+  m_win_size = win_size;
+
+  m_over = false;
+
+  m_squares.reserve(m_dim_x * m_dim_y);
+  QMatrix4x4 local;
+  for (int i=0; i < m_dim_x * m_dim_y; ++i) {
+    m_squares.push_back(new Square(m_mesh, &m_textures, &m_program, &m_world));
+
+    local.setToIdentity();
+    local.translate(1.0, -1.0, 0);
+    local.translate((i % m_dim_x) * constants::step, - (i / m_dim_x) * constants::step, 0);
+
+
+    m_squares[i]->setLocalTransform(local);
+  }
+
+
+  m_world.setToIdentity();
+  int max_dim = std::max((m_dim_x), (m_dim_y));
+  m_world.translate(-constants::translation(max_dim), constants::translation(max_dim), 0);
+  m_world.scale(constants::scale(max_dim));
+
+  update();
+
+  setFocus();
 }
 
 
@@ -180,6 +211,10 @@ void GLWidget::keyPressEvent(QKeyEvent* event) {
     m_angle_z += 5;
   }  else if (event->key() == Qt::Key::Key_Right) {
     m_angle_z -= 5;
+  } else if (event->key() == Qt::Key::Key_Plus) {
+    m_fov -= 5.0;
+  }  else if (event->key() == Qt::Key::Key_Minus) {
+    m_fov += 5.0;
   } else {
     QWidget::keyPressEvent(event);
   }
@@ -189,6 +224,9 @@ void GLWidget::keyPressEvent(QKeyEvent* event) {
   if (m_angle_z > 360) m_angle_z -= 360;
   if (m_angle_z < 0) m_angle_z += 360;
 
+  if (m_fov < 9) m_fov = 10;
+  if (m_fov > 176) m_fov = 175;
+
 
   m_view.setToIdentity();
   m_view.translate(0.0, 0.0, -4.7);
@@ -196,8 +234,14 @@ void GLWidget::keyPressEvent(QKeyEvent* event) {
   m_view.translate(0.0, 0.0, -0.3);
   m_view.rotate(m_angle_z, 0.0, 0.0, 1.0);
 
+  float aspect = float(width()) / height();
+  const float zNear = 1.0, zFar = 9.0;
+  m_projection.setToIdentity();
+  m_projection.perspective(m_fov, aspect, zNear, zFar);
+
   m_program.bind();
   m_program.setUniformValue("view", m_view);
+  m_program.setUniformValue("projection", m_projection);
   update();
 }
 

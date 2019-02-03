@@ -21,7 +21,10 @@ public:
   GLWidget(QWidget* parent = nullptr);
   ~GLWidget();
 
+  QSize minimumSizeHint() const override;
+
 public slots:
+  void newGame(int dim_x, int dim_y, int win_size);
   void setSquare(int i, SquareTypes type);
   void finishGame(Conditions conditions);
 
@@ -65,6 +68,7 @@ private:
 
   float m_angle_x;
   float m_angle_z;
+  float m_fov = 45.0f;
 };
 
 #endif // GLWIDGET_H

@@ -6,6 +6,7 @@
 #include <QWidget>
 
 class GLWidget;
+class QPushButton;
 
 class Window : public QWidget {
   Q_OBJECT
@@ -17,6 +18,8 @@ private:
   GLWidget* m_glWidget;
 
   GameEngine m_engine;
+
+  QPushButton* m_button_reset;
 };
 
 #endif // WINDOW_H

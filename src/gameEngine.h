@@ -23,9 +23,11 @@ public:
   GameEngine();
 
 public slots:
+  void newGame();
   void makeMove(int i);
 
 signals:
+  void gameCreated(int dim_x, int dim_y, int win_size);
   void moveMade(int i, SquareTypes type);
   void gameOver(Conditions conditions);
 

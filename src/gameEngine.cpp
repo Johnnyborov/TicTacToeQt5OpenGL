@@ -1,7 +1,22 @@
 #include "gameEngine.h"
 
 GameEngine::GameEngine() {
-  m_squares = std::vector<SquareTypes>(9, SquareTypes::Clear);
+  m_squares = std::vector<SquareTypes>(m_dim_x * m_dim_y, SquareTypes::Clear);
+}
+
+
+void GameEngine::newGame() {
+  int dim_x = 25, dim_y = 25, win_size = 5;
+
+  m_dim_x = dim_x;
+  m_dim_y = dim_y;
+  m_win_size = win_size;
+
+  m_count = 0;
+  m_over = false;
+  m_squares = std::vector<SquareTypes>(m_dim_x * m_dim_y, SquareTypes::Clear);
+
+  emit gameCreated(dim_x, dim_y, win_size);
 }
 
 

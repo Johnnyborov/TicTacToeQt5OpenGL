@@ -7,6 +7,9 @@
 Window::Window() {
   m_glWidget = new GLWidget(this);
 
+  connect(m_glWidget, &GLWidget::squareClicked, &m_engine, &GameEngine::makeMove);
+  connect(&m_engine, &GameEngine::moveMade, m_glWidget, &GLWidget::setSquare);
+  connect(&m_engine, &GameEngine::gameOver, m_glWidget, &GLWidget::finishGame);
 
   QHBoxLayout* h_layout = new QHBoxLayout;
   h_layout->setMargin(0);

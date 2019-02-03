@@ -21,6 +21,13 @@ public:
   GLWidget(QWidget* parent = nullptr);
   ~GLWidget();
 
+public slots:
+  void setSquare(int i, SquareTypes type);
+  void finishGame(Conditions conditions);
+
+signals:
+  void squareClicked(int i);
+
 protected:
   void initializeGL() override;
   void paintGL() override;
@@ -40,11 +47,15 @@ private:
   bool trySetSquareIJ(float x, float y, int& res_i, int& res_j);
 
 
-  int m_size;
   std::vector<Square*> m_squares;
+  int m_dim_x = 3;
+  int m_dim_y = 3;
+  int m_win_size = 3;
+  bool m_over = false;
+
 
   Mesh* m_mesh;
-  QOpenGLTexture* m_texture;
+  std::vector<QOpenGLTexture*> m_textures;
 
   QOpenGLShaderProgram m_program;
 

@@ -8,5 +8,5 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
 add_executable(${PROJECT_NAME} WIN32 resources/resources.qrc src/main.cpp
-  src/window.cpp src/glwidget.cpp src/square.cpp src/mesh.cpp)
+  src/window.cpp src/glwidget.cpp src/square.cpp src/mesh.cpp src/gameEngine.cpp)
 target_link_libraries(${PROJECT_NAME} Qt5::Widgets)

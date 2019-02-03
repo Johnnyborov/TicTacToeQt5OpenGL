@@ -1,6 +1,8 @@
 #ifndef WINDOW_H
 #define WINDOW_H
 
+#include "gameEngine.h"
+
 #include <QWidget>
 
 class GLWidget;
@@ -13,6 +15,8 @@ public:
 
 private:
   GLWidget* m_glWidget;
+
+  GameEngine m_engine;
 };
 
 #endif // WINDOW_H

@@ -6,30 +6,30 @@
 #include <QQuaternion>
 
 namespace constants {
-constexpr int max_dim = 3;
-
 constexpr float size = 2.0f;
 constexpr float margin = 0.2f;
 constexpr float step = size + margin;
 
-constexpr float scale = 1.15f / max_dim;
-constexpr float translation = (size * scale * max_dim / 2)+(margin * scale * (max_dim-1) / 2);
+constexpr float scale(int max_dim) { return 1.15f / max_dim; }
+constexpr float translation(int max_dim) {
+  return (size * scale(max_dim) * max_dim / 2)+(margin * scale(max_dim) * (max_dim-1) / 2);
+}
 } // namespace constants
 
 GLWidget::GLWidget(QWidget* parent) : QOpenGLWidget (parent) {
   setFocusPolicy(Qt::FocusPolicy::StrongFocus);
-
-  m_size = 9;
 }
 
 GLWidget::~GLWidget() {
   makeCurrent();
 
-  for (int i=0; i < m_size; ++i) {
+  for (int i=0; i < m_dim_x * m_dim_y; ++i) {
     delete m_squares[i];
   }
 
-  delete m_texture;
+  for (int i=0; i < m_textures.size(); ++i) {
+    delete m_textures[i];
+  }
   delete m_mesh;
 
   doneCurrent();
@@ -47,6 +47,7 @@ void GLWidget::initializeGL() {
   m_program.bind();
 
   m_program.setUniformValue("texture0", 0);
+  m_program.setUniformValue("texture1", 1);
 
   m_angle_x = 0;
   m_angle_z = 0;
@@ -57,18 +58,21 @@ void GLWidget::initializeGL() {
   m_program.setUniformValue("view", m_view);
 
   m_world.setToIdentity();
-  m_world.translate(-constants::translation, constants::translation, 0);
-  m_world.scale(constants::scale);
+  int max_dim = std::max((m_dim_x), (m_dim_y));
+  m_world.translate(-constants::translation(max_dim), constants::translation(max_dim), 0);
+  m_world.scale(constants::scale(max_dim));
 
 
   m_mesh = new Mesh();
-  m_texture = new QOpenGLTexture(QImage(":/textures/box.png").mirrored());
+  m_textures.push_back(new QOpenGLTexture(QImage(":/textures/box.png").mirrored()));
+  m_textures.push_back(new QOpenGLTexture(QImage(":/textures/clear.png").mirrored()));
+  m_textures.push_back(new QOpenGLTexture(QImage(":/textures/cross.png").mirrored()));
+  m_textures.push_back(new QOpenGLTexture(QImage(":/textures/nought.png").mirrored()));
 
-
-  m_squares.reserve(m_size);
+  m_squares.reserve(m_dim_x * m_dim_y);
   QMatrix4x4 local;
-  for (int i=0; i < m_size; ++i) {
-    m_squares.push_back(new Square(m_mesh, m_texture, &m_program, &m_world));
+  for (int i=0; i < m_dim_x * m_dim_y; ++i) {
+    m_squares.push_back(new Square(m_mesh, m_textures, &m_program, &m_world));
 
     local.setToIdentity();
     local.translate(1.0, -1.0, 0);
@@ -83,7 +87,7 @@ void GLWidget::paintGL() {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   m_program.bind();
-  for (int i=0; i < m_size; ++i) {
+  for (int i=0; i < m_dim_x * m_dim_y; ++i) {
     m_squares[i]->draw();
   }
 }
@@ -105,12 +109,49 @@ void GLWidget::createProgram() {
 }
 
 
+void GLWidget::setSquare(int i, SquareTypes type) {
+  m_squares[i]->setType(type);
+
+  update();
+}
+
+
+void GLWidget::finishGame(Conditions conditions) {
+  int i = conditions.start_i;
+  int j = conditions.start_j;
+
+  switch(conditions.direction) {
+    case Directions::Right:
+      for (int k = 0; k < m_win_size; ++k)
+        m_squares[i*m_dim_x + (j + k)]->setStatus(Statuses::WinChain);
+      break;
+    case Directions::Down:
+      for (int k = 0; k < m_win_size; ++k)
+        m_squares[(i+k)*m_dim_x + j]->setStatus(Statuses::WinChain);
+      break;
+    case Directions::RightDown:
+      for (int k = 0; k < m_win_size; ++k)
+        m_squares[(i+k)*m_dim_x + (j + k)]->setStatus(Statuses::WinChain);
+      break;
+    case Directions::LeftDown:
+      for (int k = 0; k < m_win_size; ++k)
+        m_squares[(i+k)*m_dim_x + (j - k)]->setStatus(Statuses::WinChain);
+      break;
+    }
+
+  m_over = true;
+
+  update();
+}
+
 void GLWidget::mousePressEvent(QMouseEvent* event) {
   int i = getSquareUnderMouse(event->x(), event->y());
 
   if (i == -1) return;
 
-  m_squares[i]->setPressed(true);
+  if (m_over || m_squares[i]->getType() != SquareTypes::Clear) return;
+
+  m_squares[i]->setStatus(Statuses::Pressed);
   update();
 }
 
@@ -120,7 +161,12 @@ void GLWidget::mouseReleaseEvent(QMouseEvent* event) {
 
   if (i == -1) return;
 
-  m_squares[i]->setPressed(false);
+
+  if (m_over || m_squares[i]->getType() != SquareTypes::Clear) return;
+
+  m_squares[i]->setStatus(Statuses::Normal);
+
+  emit squareClicked(i);
   update();
 }
 
@@ -161,13 +207,14 @@ void GLWidget::keyPressEvent(QKeyEvent* event) {
 int GLWidget::getSquareUnderMouse(int screen_x, int screen_y) {
   QVector3D ray_world = calculateRay(screen_x, screen_y);
 
+  int max_dim = std::max((m_dim_x), (m_dim_y));
   float x, y;
-  if (!trySetIntersectionWithPlaneXY(ray_world, 1.0f * constants::scale, x, y)) return -1;
+  if (!trySetIntersectionWithPlaneXY(ray_world, 1.0f * constants::scale(max_dim), x, y)) return -1;
 
   int i, j;
   if (!trySetSquareIJ(x, y, i, j)) return -1;
 
-  return i * constants::max_dim + j;
+  return i * m_dim_x + j;
 }
 
 
@@ -220,14 +267,13 @@ bool GLWidget::trySetIntersectionWithPlaneXY(QVector3D ray_world, float plane_z,
 
 // checks if (x, y) coordinates belong to any square and gets that square (i, j) if they do
 bool  GLWidget::trySetSquareIJ(float x, float y, int& res_i, int& res_j) {
-  int md = constants::max_dim;
   float mrg = constants::margin;
   float step = constants::step;
 
   int j = static_cast<int>(x/step);
   int i = static_cast<int>(y/step);
 
-  if (x < 0 || y < 0 || x > md*step || y > md*step) return false; // not in squares area
+  if (x < 0 || y < 0 || x > m_dim_x*step || y > m_dim_y*step) return false; // not in squares area
   if ((j+1)*step - x < mrg || (i+1)*step - y < mrg) return false; // between squares
 
 

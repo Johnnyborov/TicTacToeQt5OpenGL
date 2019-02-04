@@ -1,15 +1,15 @@
-#include "gameWidget.h"
+#include "FieldWidget.h"
 
 #include <QMouseEvent>
 #include <QKeyEvent>
 
 
-GameWidget::GameWidget(QWidget* parent) : QOpenGLWidget (parent) {
+FieldWidget::FieldWidget(QWidget* parent) : QOpenGLWidget (parent) {
   setFocusPolicy(Qt::FocusPolicy::StrongFocus);
 }
 
 
-GameWidget::~GameWidget() {
+FieldWidget::~FieldWidget() {
   makeCurrent();
 
   m_field.destroy();
@@ -17,12 +17,12 @@ GameWidget::~GameWidget() {
   doneCurrent();
 }
 
-QSize GameWidget::minimumSizeHint() const {
+QSize FieldWidget::minimumSizeHint() const {
   return QSize(400, 400);
 }
 
 
-void GameWidget::initializeGL() {
+void FieldWidget::initializeGL() {
   initializeOpenGLFunctions();
 
   glEnable(GL_DEPTH_TEST);
@@ -49,7 +49,7 @@ void GameWidget::initializeGL() {
 }
 
 
-void GameWidget::paintGL() {
+void FieldWidget::paintGL() {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   m_program.bind();
@@ -58,7 +58,7 @@ void GameWidget::paintGL() {
 }
 
 
-void GameWidget::resizeGL(int width, int height) {
+void FieldWidget::resizeGL(int width, int height) {
   float aspect = float(width) / float(height ? height : 1);
   const float zNear = 1.0, zFar = 9.0;
 
@@ -69,14 +69,14 @@ void GameWidget::resizeGL(int width, int height) {
 }
 
 
-void GameWidget::createProgram() {
+void FieldWidget::createProgram() {
   m_program.addShaderFromSourceFile(QOpenGLShader::Vertex, ":/shaders/vshader.glsl");
   m_program.addShaderFromSourceFile(QOpenGLShader::Fragment, ":/shaders/fshader.glsl");
   m_program.link();
 }
 
 
-void GameWidget::newGame(int dim_x, int dim_y, int win_size) {
+void FieldWidget::newGame(int dim_x, int dim_y, int win_size) {
   m_field.newGame(dim_x, dim_y, win_size);
 
   update();
@@ -85,20 +85,20 @@ void GameWidget::newGame(int dim_x, int dim_y, int win_size) {
 }
 
 
-void GameWidget::setSquare(int i, SquareTypes type) {
+void FieldWidget::setSquare(int i, SquareTypes type) {
   m_field.setSquare(i, type);
 
   update();
 }
 
 
-void GameWidget::finishGame(Conditions conditions) {
+void FieldWidget::finishGame(Conditions conditions) {
   m_field.finishGame(conditions);
 
   update();
 }
 
-void GameWidget::mousePressEvent(QMouseEvent* event) {
+void FieldWidget::mousePressEvent(QMouseEvent* event) {
   int i = m_field.tryPress(event->x(), event->y(), width(), height());
 
   if (i == -1) return;
@@ -107,7 +107,7 @@ void GameWidget::mousePressEvent(QMouseEvent* event) {
 }
 
 
-void GameWidget::mouseReleaseEvent(QMouseEvent* event) {
+void FieldWidget::mouseReleaseEvent(QMouseEvent* event) {
   int i = m_field.tryRelease(event->x(), event->y(), width(), height());
 
   if (i == -1) return;
@@ -117,7 +117,7 @@ void GameWidget::mouseReleaseEvent(QMouseEvent* event) {
 }
 
 
-void GameWidget::keyPressEvent(QKeyEvent* event) {
+void FieldWidget::keyPressEvent(QKeyEvent* event) {
   if (event->key() == Qt::Key::Key_Up) {
     m_angle_x += 5;
   } else if (event->key() == Qt::Key::Key_Down) {

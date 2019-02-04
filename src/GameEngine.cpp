@@ -1,4 +1,4 @@
-#include "gameEngine.h"
+#include "GameEngine.h"
 
 GameEngine::GameEngine() {
   m_squares = std::vector<SquareTypes>(m_dim_x * m_dim_y, SquareTypes::Clear);

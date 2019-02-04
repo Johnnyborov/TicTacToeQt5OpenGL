@@ -1,4 +1,4 @@
-#include "window.h"
+#include "GameWindow.h"
 
 #include <QApplication>
 #include <QSurfaceFormat>
@@ -10,7 +10,7 @@ int main(int argc, char* argv[]) {
   fmt.setProfile(QSurfaceFormat::CoreProfile);
   QSurfaceFormat::setDefaultFormat(fmt);
 
-  Window w;
+  GameWindow w;
   w.show();
 
   return app.exec();

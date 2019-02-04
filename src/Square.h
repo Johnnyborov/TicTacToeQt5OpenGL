@@ -1,8 +1,8 @@
 #ifndef SQUARE_H
 #define SQUARE_H
 
-#include "mesh.h"
-#include "gameEngine.h"
+#include "Mesh.h"
+#include "GameEngine.h"
 
 #include <QOpenGLTexture>
 #include <QOpenGLFunctions>

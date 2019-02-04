@@ -1,4 +1,4 @@
-#include "gameField.h"
+#include "FieldModel.h"
 
 #include <QImage>
 #include <QOpenGLTexture>
@@ -17,7 +17,7 @@ constexpr float translation(int max_dim) {
 } // namespace constants
 
 
-void GameField::create(QOpenGLShaderProgram* program, QMatrix4x4* projection,
+void FieldModel::create(QOpenGLShaderProgram* program, QMatrix4x4* projection,
                        QMatrix4x4* view, QMatrix4x4* model) {
   m_program = program;
 
@@ -35,7 +35,7 @@ void GameField::create(QOpenGLShaderProgram* program, QMatrix4x4* projection,
 }
 
 
-void GameField::destroy() {
+void FieldModel::destroy() {
   for (int i=0; i < m_squares.size(); ++i) {
     delete m_squares[i];
   }
@@ -46,14 +46,14 @@ void GameField::destroy() {
   delete m_mesh;
 }
 
-void GameField::draw() {
+void FieldModel::draw() {
   for (int i=0; i < m_dim_x * m_dim_y; ++i) {
     m_squares[i]->draw();
   }
 }
 
 
-int GameField::tryPress(int x, int y, int w, int h) {
+int FieldModel::tryPress(int x, int y, int w, int h) {
   int i = getSquareUnderMouse(x, y, w, h);
 
   if (i == -1) return -1;
@@ -66,7 +66,7 @@ int GameField::tryPress(int x, int y, int w, int h) {
 }
 
 
-int GameField::tryRelease(int x, int y, int w, int h) {
+int FieldModel::tryRelease(int x, int y, int w, int h) {
   int i = getSquareUnderMouse(x, y, w, h);
 
   if (i == -1) return -1;
@@ -79,7 +79,7 @@ int GameField::tryRelease(int x, int y, int w, int h) {
 }
 
 
-void GameField::newGame(int dim_x, int dim_y, int win_size) {
+void FieldModel::newGame(int dim_x, int dim_y, int win_size) {
   for (int i=0; i < m_squares.size(); ++i) {
     delete m_squares[i];
   }
@@ -112,12 +112,12 @@ void GameField::newGame(int dim_x, int dim_y, int win_size) {
 }
 
 
-void GameField::setSquare(int i, SquareTypes type) {
+void FieldModel::setSquare(int i, SquareTypes type) {
   m_squares[i]->setType(type);
 }
 
 
-void GameField::finishGame(Conditions conditions) {
+void FieldModel::finishGame(Conditions conditions) {
   int i = conditions.start_i;
   int j = conditions.start_j;
 
@@ -146,7 +146,7 @@ void GameField::finishGame(Conditions conditions) {
 
 
 // ======================RayCasting======================
-int GameField::getSquareUnderMouse(int screen_x, int screen_y, int width, int height) {
+int FieldModel::getSquareUnderMouse(int screen_x, int screen_y, int width, int height) {
   QVector3D ray_world = calculateRay(screen_x, screen_y, width, height);
 
   int max_dim = std::max((m_dim_x), (m_dim_y));
@@ -160,7 +160,7 @@ int GameField::getSquareUnderMouse(int screen_x, int screen_y, int width, int he
 }
 
 
-QVector3D GameField::calculateRay(int screen_x, int screen_y, int width, int height) {
+QVector3D FieldModel::calculateRay(int screen_x, int screen_y, int width, int height) {
   float clip_x = (2.0f * screen_x) / width - 1.0f;
   float clip_y = 1.0f - (2.0f * screen_y) / height;
   QVector4D ray_clip(clip_x, clip_y, -1.0f, 1.0f);
@@ -179,7 +179,7 @@ QVector3D GameField::calculateRay(int screen_x, int screen_y, int width, int hei
 }
 
 
-bool GameField::trySetIntersectionWithPlaneXY(QVector3D ray_world, float plane_z, float& res_x, float& res_y) {
+bool FieldModel::trySetIntersectionWithPlaneXY(QVector3D ray_world, float plane_z, float& res_x, float& res_y) {
   // find ray intersection coordinates with squares plane in world space
   QVector3D camera(m_view->inverted() * QVector3D());
 
@@ -208,7 +208,7 @@ bool GameField::trySetIntersectionWithPlaneXY(QVector3D ray_world, float plane_z
 
 
 // checks if (x, y) coordinates belong to any square and gets that square (i, j) if they do
-bool  GameField::trySetSquareIJ(float x, float y, int& res_i, int& res_j) {
+bool  FieldModel::trySetSquareIJ(float x, float y, int& res_i, int& res_j) {
   float mrg = constants::margin;
   float step = constants::step;
 

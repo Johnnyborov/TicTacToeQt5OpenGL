@@ -1,8 +1,8 @@
-#ifndef GAME_FIELD_H
-#define GAME_FIELD_H
+#ifndef FIELD_MODEL_H
+#define FIELD_MODEL_H
 
-#include "square.h"
-#include "mesh.h"
+#include "Square.h"
+#include "Mesh.h"
 
 #include <vector>
 
@@ -10,7 +10,7 @@ class QOpenGLShaderProgram;
 class QOpenGLTexture;
 class QMatrix4x4;
 
-class GameField {
+class FieldModel {
 public:
   void create(QOpenGLShaderProgram* program, QMatrix4x4* projection,
               QMatrix4x4* view, QMatrix4x4* model);
@@ -50,4 +50,4 @@ private:
   QMatrix4x4* m_model = nullptr;
 };
 
-#endif // GAME_FIELD_H
+#endif // FIELD_MODEL_H

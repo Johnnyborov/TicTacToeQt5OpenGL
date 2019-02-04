@@ -1,7 +1,7 @@
-#ifndef GLWIDGET_H
-#define GLWIDGET_H
+#ifndef FIELD_WIDGET_H
+#define FIELD_WIDGET_H
 
-#include "gameField.h"
+#include "FieldModel.h"
 
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions>
@@ -11,12 +11,12 @@
 class QMouseEvent;
 class QKeyEvent;
 
-class GameWidget : public QOpenGLWidget, protected QOpenGLFunctions {
+class FieldWidget : public QOpenGLWidget, protected QOpenGLFunctions {
   Q_OBJECT
 
 public:
-  GameWidget(QWidget* parent = nullptr);
-  ~GameWidget();
+  FieldWidget(QWidget* parent = nullptr);
+  ~FieldWidget();
 
   QSize minimumSizeHint() const override;
 
@@ -42,7 +42,7 @@ private:
 
   QOpenGLShaderProgram m_program;
 
-  GameField m_field;
+  FieldModel m_field;
 
   QMatrix4x4 m_projection;
   QMatrix4x4 m_view;
@@ -53,4 +53,4 @@ private:
   float m_fov = 45.0f;
 };
 
-#endif // GLWIDGET_H
+#endif // FIELD_WIDGET_H

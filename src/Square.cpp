@@ -1,4 +1,4 @@
-#include "square.h"
+#include "Square.h"
 
 #include <QOpenGLShaderProgram>
 

@@ -18,6 +18,8 @@ private:
   QOpenGLBuffer m_vbo;
   QOpenGLBuffer m_ebo;
   QOpenGLVertexArrayObject m_vao;
+
+  int m_count;
 };
 
 #endif // MESH_H

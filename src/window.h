@@ -5,7 +5,7 @@
 
 #include <QWidget>
 
-class GLWidget;
+class GameWidget;
 class QPushButton;
 
 class Window : public QWidget {
@@ -15,7 +15,7 @@ public:
   Window();
 
 private:
-  GLWidget* m_glWidget;
+  GameWidget* m_game_widget;
 
   GameEngine m_engine;
 

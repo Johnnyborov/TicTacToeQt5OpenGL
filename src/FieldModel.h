@@ -22,22 +22,21 @@ public:
 
   void draw();
 
-  int tryPress(int x, int y, int w, int h);
-  int tryRelease(int x, int y, int w, int h);
+  int getSquareUnderMouse(int x, int y, int w, int h);
+  void press(int i);
+  void release(int i);
 
 private:
-  int getSquareUnderMouse(int x, int y, int w, int h);
-
   QVector3D calculateRay(int x, int y, int w, int h);
   bool trySetIntersectionWithPlaneXY(QVector3D ray_world, float plane_distance, float& res_x, float& res_y);
   bool trySetSquareIJ(float x, float y, int& res_i, int& res_j);
 
 
   std::vector<Square*> m_squares;
-  int m_dim_x = 3;
-  int m_dim_y = 3;
-  int m_win_size = 3;
-  bool m_over = false;
+  int m_dim_x;
+  int m_dim_y;
+  int m_win_size;
+  bool m_over;
 
 
   Mesh* m_mesh = nullptr;

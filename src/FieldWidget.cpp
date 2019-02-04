@@ -43,6 +43,7 @@ void FieldWidget::initializeGL() {
   m_view.translate(0.0, 0.0, -0.3);
   m_view.rotate(m_angle_z, 0.0, 0.0, 1.0);
   m_program.setUniformValue("view", m_view);
+  m_program.setUniformValue("view_inverted", m_view.inverted());
 
 
   m_field.create(&m_program, &m_projection, &m_view, &m_model);
@@ -101,20 +102,31 @@ void FieldWidget::finishGame(Conditions conditions) {
 }
 
 void FieldWidget::mousePressEvent(QMouseEvent* event) {
-  int i = m_field.tryPress(event->x(), event->y(), width(), height());
+  int i = m_field.getSquareUnderMouse(event->x(), event->y(), width(), height());
 
   if (i == -1) return;
+
+  m_field.press(i);
+  m_last_pressed = i;
 
   update();
 }
 
 
 void FieldWidget::mouseReleaseEvent(QMouseEvent* event) {
-  int i = m_field.tryRelease(event->x(), event->y(), width(), height());
+  if (m_last_pressed == -1) return;
 
-  if (i == -1) return;
+  m_field.release(m_last_pressed);
 
-  emit squareClicked(i);
+
+  int i = m_field.getSquareUnderMouse(event->x(), event->y(), width(), height());
+
+  if (i == m_last_pressed) {
+    emit squareClicked(i);
+  }
+
+  m_last_pressed = -1;
+
   update();
 }
 
@@ -158,6 +170,7 @@ void FieldWidget::keyPressEvent(QKeyEvent* event) {
 
   m_program.bind();
   m_program.setUniformValue("view", m_view);
+  m_program.setUniformValue("view_inverted", m_view.inverted());
   m_program.setUniformValue("projection", m_projection);
   update();
 }

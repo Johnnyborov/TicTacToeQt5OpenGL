@@ -52,6 +52,8 @@ private:
   float m_angle_x;
   float m_angle_z;
   float m_fov = 45.0f;
+
+  int m_last_pressed = -1;
 };
 
 #endif // FIELD_WIDGET_H

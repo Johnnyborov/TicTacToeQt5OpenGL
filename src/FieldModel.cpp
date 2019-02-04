@@ -26,10 +26,10 @@ void FieldModel::create(QOpenGLShaderProgram* program, QMatrix4x4* projection,
   m_model = model;
 
   m_mesh = new Mesh();
-  m_textures.push_back(new QOpenGLTexture(QImage(":/textures/box.png").mirrored()));
-  m_textures.push_back(new QOpenGLTexture(QImage(":/textures/clear.png").mirrored()));
-  m_textures.push_back(new QOpenGLTexture(QImage(":/textures/cross.png").mirrored()));
-  m_textures.push_back(new QOpenGLTexture(QImage(":/textures/nought.png").mirrored()));
+  m_textures.emplace_back(new QOpenGLTexture(QImage(":/textures/box.png").mirrored()));
+  m_textures.emplace_back(new QOpenGLTexture(QImage(":/textures/clear.png").mirrored()));
+  m_textures.emplace_back(new QOpenGLTexture(QImage(":/textures/cross.png").mirrored()));
+  m_textures.emplace_back(new QOpenGLTexture(QImage(":/textures/nought.png").mirrored()));
 }
 
 
@@ -37,11 +37,17 @@ void FieldModel::destroy() {
   for (int i=0; i < m_squares.size(); ++i) {
     delete m_squares[i];
   }
+  m_squares.clear();
 
   for (int i=0; i < m_textures.size(); ++i) {
     delete m_textures[i];
   }
-  delete m_mesh;
+  m_textures.clear();
+
+  if (m_mesh != nullptr) {
+    delete m_mesh;
+    m_mesh = nullptr;
+  }
 }
 
 void FieldModel::draw() {
@@ -51,29 +57,21 @@ void FieldModel::draw() {
 }
 
 
-int FieldModel::tryPress(int x, int y, int w, int h) {
-  int i = getSquareUnderMouse(x, y, w, h);
+void FieldModel::press(int i) {
+  if (i == -1) return;
 
-  if (i == -1) return -1;
-
-  if (m_over || m_squares[i]->getType() != SquareTypes::Clear) return -1;
+  if (m_over || m_squares[i]->getType() != SquareTypes::Clear) return;
 
   m_squares[i]->setStatus(Statuses::Pressed);
-
-  return i;
 }
 
 
-int FieldModel::tryRelease(int x, int y, int w, int h) {
-  int i = getSquareUnderMouse(x, y, w, h);
+void FieldModel::release(int i) {
+  if (i == -1) return;
 
-  if (i == -1) return -1;
-
-  if (m_over || m_squares[i]->getType() != SquareTypes::Clear) return -1;
+  if (m_over || m_squares[i]->getType() != SquareTypes::Clear) return;
 
   m_squares[i]->setStatus(Statuses::Normal);
-
-  return i;
 }
 
 
@@ -83,16 +81,18 @@ void FieldModel::newGame(int dim_x, int dim_y, int win_size) {
   }
   m_squares.clear();
 
+
   m_dim_x = dim_x;
   m_dim_y = dim_y;
   m_win_size = win_size;
 
   m_over = false;
 
+
   m_squares.reserve(m_dim_x * m_dim_y);
   QMatrix4x4 local;
   for (int i=0; i < m_dim_x * m_dim_y; ++i) {
-    m_squares.push_back(new Square(m_mesh, &m_textures, m_program, m_model));
+    m_squares.emplace_back(new Square(m_mesh, &m_textures, m_program, m_model));
 
     local.setToIdentity();
     local.translate(1.0, -1.0, 0);

@@ -7,6 +7,7 @@ struct VertexData
 {
     QVector3D position;
     QVector2D texCoord;
+    QVector3D normal;
 };
 
 
@@ -22,6 +23,8 @@ Mesh::Mesh() : m_ebo(QOpenGLBuffer::IndexBuffer) {
 }
 
 Mesh::~Mesh() {
+  m_vao.destroy();
+
   m_ebo.destroy();
   m_vbo.destroy();
 }
@@ -37,11 +40,13 @@ int Mesh::count() {
 
 
 void Mesh::initGeometry() {
+  QVector3D normal(0.0f, 0.0f,  1.0f);
+
   VertexData vertices[] = {
-    {QVector3D(-1.0f, -1.0f,  1.0f), QVector2D(0.0f, 0.0f)},
-    {QVector3D( 1.0f, -1.0f,  1.0f), QVector2D(1.0f, 0.0f)},
-    {QVector3D(-1.0f,  1.0f,  1.0f), QVector2D(0.0f, 1.0f)},
-    {QVector3D( 1.0f,  1.0f,  1.0f), QVector2D(1.0f, 1.0f)}
+    {QVector3D(-1.0f, -1.0f,  1.0f), QVector2D(0.0f, 0.0f), normal},
+    {QVector3D( 1.0f, -1.0f,  1.0f), QVector2D(1.0f, 0.0f), normal},
+    {QVector3D(-1.0f,  1.0f,  1.0f), QVector2D(0.0f, 1.0f), normal},
+    {QVector3D( 1.0f,  1.0f,  1.0f), QVector2D(1.0f, 1.0f), normal}
   };
 
   GLuint indices[] = {
@@ -60,7 +65,14 @@ void Mesh::initGeometry() {
 
   glEnableVertexAttribArray(0);
   glEnableVertexAttribArray(1);
+  glEnableVertexAttribArray(2);
 
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(VertexData), nullptr);
-  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(VertexData), reinterpret_cast<void*>(sizeof(QVector3D)));
+  size_t offset = 0;
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(VertexData), reinterpret_cast<void*>(offset));
+
+  offset += sizeof(QVector3D);
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(VertexData), reinterpret_cast<void*>(offset));
+
+  offset += sizeof(QVector2D);
+  glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(VertexData), reinterpret_cast<void*>(offset));
 }

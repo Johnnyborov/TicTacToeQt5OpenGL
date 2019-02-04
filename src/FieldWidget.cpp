@@ -46,6 +46,8 @@ void FieldWidget::initializeGL() {
 
 
   m_field.create(&m_program, &m_projection, &m_view, &m_model);
+
+  emit glInitialized();
 }
 
 

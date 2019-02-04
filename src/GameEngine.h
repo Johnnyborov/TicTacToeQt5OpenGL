@@ -23,7 +23,7 @@ public:
   GameEngine();
 
 public slots:
-  void newGame();
+  void newGame(int dim_x, int dim_y, int win_size);
   void makeMove(int i);
 
 signals:

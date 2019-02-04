@@ -30,8 +30,6 @@ void FieldModel::create(QOpenGLShaderProgram* program, QMatrix4x4* projection,
   m_textures.push_back(new QOpenGLTexture(QImage(":/textures/clear.png").mirrored()));
   m_textures.push_back(new QOpenGLTexture(QImage(":/textures/cross.png").mirrored()));
   m_textures.push_back(new QOpenGLTexture(QImage(":/textures/nought.png").mirrored()));
-
-  newGame(3, 3, 3);
 }
 
 

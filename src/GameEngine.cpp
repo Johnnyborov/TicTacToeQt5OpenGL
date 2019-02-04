@@ -5,9 +5,7 @@ GameEngine::GameEngine() {
 }
 
 
-void GameEngine::newGame() {
-  int dim_x = 25, dim_y = 25, win_size = 5;
-
+void GameEngine::newGame(int dim_x, int dim_y, int win_size) {
   m_dim_x = dim_x;
   m_dim_y = dim_y;
   m_win_size = win_size;

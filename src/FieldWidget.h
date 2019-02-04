@@ -26,6 +26,7 @@ public slots:
   void finishGame(Conditions conditions);
 
 signals:
+  void glInitialized();
   void squareClicked(int i);
 
 protected:

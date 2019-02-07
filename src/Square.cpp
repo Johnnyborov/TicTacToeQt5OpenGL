@@ -2,12 +2,12 @@
 
 #include <QOpenGLShaderProgram>
 
-Square::Square(Mesh* mesh, std::vector<QOpenGLTexture*>* textures, QOpenGLShaderProgram* program, QMatrix4x4* world)
+Square::Square(Mesh* mesh, std::vector<std::unique_ptr<QOpenGLTexture>>* textures, QOpenGLShaderProgram* program, QMatrix4x4* world)
   : m_mesh(mesh), m_textures(textures), m_program(program), m_world(world) {
   initializeOpenGLFunctions();
 
-  m_texture0 = (*m_textures)[0];
-  m_texture1 = (*m_textures)[1];
+  m_texture0 = (*m_textures)[0].get();
+  m_texture1 = (*m_textures)[1].get();
 }
 
 
@@ -41,7 +41,7 @@ void Square::setStatus(Statuses status) {
 
 void Square::setType(SquareTypes type) {
   m_type = type;
-  m_texture1 = (*m_textures)[1 + static_cast<unsigned int>(type)];
+  m_texture1 = (*m_textures)[1 + static_cast<unsigned int>(type)].get();
 }
 
 

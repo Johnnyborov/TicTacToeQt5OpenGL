@@ -8,6 +8,7 @@
 #include <QOpenGLFunctions>
 #include <QMatrix4x4>
 #include <vector>
+#include <memory>
 
 class QOpenGLShaderProgram;
 
@@ -15,7 +16,7 @@ enum class Statuses : unsigned char { Normal, Pressed, WinChain };
 
 class Square : protected QOpenGLFunctions {
 public:
-  Square(Mesh* mesh, std::vector<QOpenGLTexture*>* textures, QOpenGLShaderProgram* program, QMatrix4x4* world);
+  Square(Mesh* mesh, std::vector<std::unique_ptr<QOpenGLTexture>>* textures, QOpenGLShaderProgram* program, QMatrix4x4* world);
 
   void draw();
   void setLocalTransform(QMatrix4x4 local);
@@ -25,7 +26,7 @@ public:
 
 private:
   Mesh* m_mesh;
-  std::vector<QOpenGLTexture*>* m_textures;
+  std::vector<std::unique_ptr<QOpenGLTexture>>* m_textures;
   QOpenGLTexture* m_texture0;
   QOpenGLTexture* m_texture1;
   QOpenGLShaderProgram* m_program;

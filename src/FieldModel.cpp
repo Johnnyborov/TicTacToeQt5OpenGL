@@ -25,29 +25,20 @@ void FieldModel::create(QOpenGLShaderProgram* program, QMatrix4x4* projection,
   m_view = view;
   m_model = model;
 
-  m_mesh = new Mesh();
-  m_textures.emplace_back(new QOpenGLTexture(QImage(":/textures/box.png").mirrored()));
-  m_textures.emplace_back(new QOpenGLTexture(QImage(":/textures/clear.png").mirrored()));
-  m_textures.emplace_back(new QOpenGLTexture(QImage(":/textures/cross.png").mirrored()));
-  m_textures.emplace_back(new QOpenGLTexture(QImage(":/textures/nought.png").mirrored()));
+  m_mesh = std::make_unique<Mesh>();
+  m_textures.emplace_back(std::make_unique<QOpenGLTexture>(QImage(":/textures/box.png").mirrored()));
+  m_textures.emplace_back(std::make_unique<QOpenGLTexture>(QImage(":/textures/clear.png").mirrored()));
+  m_textures.emplace_back(std::make_unique<QOpenGLTexture>(QImage(":/textures/cross.png").mirrored()));
+  m_textures.emplace_back(std::make_unique<QOpenGLTexture>(QImage(":/textures/nought.png").mirrored()));
 }
 
 
 void FieldModel::destroy() {
-  for (int i=0; i < m_squares.size(); ++i) {
-    delete m_squares[i];
-  }
   m_squares.clear();
 
-  for (int i=0; i < m_textures.size(); ++i) {
-    delete m_textures[i];
-  }
   m_textures.clear();
 
-  if (m_mesh != nullptr) {
-    delete m_mesh;
-    m_mesh = nullptr;
-  }
+  m_mesh.reset(nullptr);
 }
 
 void FieldModel::draw() {
@@ -76,9 +67,6 @@ void FieldModel::release(int i) {
 
 
 void FieldModel::newGame(int dim_x, int dim_y, int win_size) {
-  for (int i=0; i < m_squares.size(); ++i) {
-    delete m_squares[i];
-  }
   m_squares.clear();
 
 
@@ -92,7 +80,7 @@ void FieldModel::newGame(int dim_x, int dim_y, int win_size) {
   m_squares.reserve(m_dim_x * m_dim_y);
   QMatrix4x4 local;
   for (int i=0; i < m_dim_x * m_dim_y; ++i) {
-    m_squares.emplace_back(new Square(m_mesh, &m_textures, m_program, m_model));
+    m_squares.emplace_back(std::make_unique<Square>(m_mesh.get(), &m_textures, m_program, m_model));
 
     local.setToIdentity();
     local.translate(1.0, -1.0, 0);
@@ -148,6 +136,7 @@ int FieldModel::getSquareUnderMouse(int screen_x, int screen_y, int width, int h
   QVector3D ray_world = calculateRay(screen_x, screen_y, width, height);
 
   int max_dim = std::max((m_dim_x), (m_dim_y));
+
   float x, y;
   if (!trySetIntersectionWithPlaneXY(ray_world, 1.0f * constants::scale(max_dim), x, y)) return -1;
 

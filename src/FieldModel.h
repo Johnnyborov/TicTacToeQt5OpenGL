@@ -5,6 +5,7 @@
 #include "Mesh.h"
 
 #include <vector>
+#include <memory>
 
 class QOpenGLShaderProgram;
 class QOpenGLTexture;
@@ -32,15 +33,14 @@ private:
   bool trySetSquareIJ(float x, float y, int& res_i, int& res_j);
 
 
-  std::vector<Square*> m_squares;
+  std::unique_ptr<Mesh> m_mesh;
+  std::vector<std::unique_ptr<QOpenGLTexture>> m_textures;
+
+  std::vector<std::unique_ptr<Square>> m_squares;
   int m_dim_x;
   int m_dim_y;
   int m_win_size;
   bool m_over;
-
-
-  Mesh* m_mesh = nullptr;
-  std::vector<QOpenGLTexture*> m_textures;
 
   QOpenGLShaderProgram* m_program = nullptr;
 

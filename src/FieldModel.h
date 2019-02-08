@@ -29,8 +29,8 @@ public:
 
 private:
   QVector3D calculateRay(int x, int y, int w, int h);
-  bool trySetIntersectionWithPlaneXY(QVector3D ray_world, float plane_distance, float& res_x, float& res_y);
-  bool trySetSquareIJ(float x, float y, int& res_i, int& res_j);
+  float calculateIntersectionWithPlaneRayLength(
+      QVector3D camera, QVector3D ray, float plane_distance, QVector3D plane_normal);
 
 
   std::unique_ptr<Mesh> m_mesh;

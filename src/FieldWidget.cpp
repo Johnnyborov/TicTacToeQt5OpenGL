@@ -116,10 +116,10 @@ void FieldWidget::mousePressEvent(QMouseEvent* event) {
 void FieldWidget::mouseReleaseEvent(QMouseEvent* event) {
   if (m_last_pressed == -1) return;
 
+  int i = m_field.getSquareUnderMouse(event->x(), event->y(), width(), height());
+
   m_field.release(m_last_pressed);
 
-
-  int i = m_field.getSquareUnderMouse(event->x(), event->y(), width(), height());
 
   if (i == m_last_pressed) {
     emit squareClicked(i);

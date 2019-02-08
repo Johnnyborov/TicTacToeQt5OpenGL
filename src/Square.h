@@ -20,6 +20,7 @@ public:
 
   void draw();
   void setLocalTransform(QMatrix4x4 local);
+  QMatrix4x4 getLocalTransform();
   void setStatus(Statuses status);
   void setType(SquareTypes type);
   SquareTypes getType();

@@ -3,12 +3,16 @@
 #include <QImage>
 #include <QOpenGLTexture>
 #include <QMatrix4x4>
+#include <limits>
 
 
 namespace constants {
 constexpr float size = 2.0f;
 constexpr float margin = 0.2f;
 constexpr float step = size + margin;
+
+constexpr float height = 1.0f;
+constexpr float presision = 0.001f;
 
 constexpr float scale(int max_dim) { return 1.15f / max_dim; }
 constexpr float translation(int max_dim) {
@@ -133,17 +137,58 @@ void FieldModel::finishGame(Conditions conditions) {
 
 // ======================RayCasting======================
 int FieldModel::getSquareUnderMouse(int screen_x, int screen_y, int width, int height) {
-  QVector3D ray_world = calculateRay(screen_x, screen_y, width, height);
+  QVector3D ray = calculateRay(screen_x, screen_y, width, height);
+  QVector3D camera(m_model->inverted() * m_view->inverted() * QVector3D());
 
-  int max_dim = std::max((m_dim_x), (m_dim_y));
 
-  float x, y;
-  if (!trySetIntersectionWithPlaneXY(ray_world, 1.0f * constants::scale(max_dim), x, y)) return -1;
+  QVector3D plane_normals[3] = {
+    QVector3D(0.0f, 0.0f, 1.0f),
+    QVector3D(0.0f, 1.0f, 0.0f),
+    QVector3D(1.0f, 0.0f, 0.0f)
+  };
 
-  int i, j;
-  if (!trySetSquareIJ(x, y, i, j)) return -1;
+  float plane_distances[3][2] = {
+    {0, 1},
+    {-1, 1},
+    {-1, 1}
+  };
 
-  return i * m_dim_x + j;
+
+  int index = -1;
+  float min_length = std::numeric_limits<float>::max();
+
+  for (unsigned k = 0; k < m_squares.size(); ++k) {
+    QVector3D origin(m_squares[k]->getLocalTransform() * QVector4D(0.0, 0.0, 0.0, 1.0));
+
+    for (unsigned i = 0; i < 3; ++i) {
+      float offset = QVector3D::dotProduct(origin, plane_normals[i]);
+      float min_length_local = std::numeric_limits<float>::max();
+
+      for (unsigned j = 0; j < 2; ++j) {
+        float length = calculateIntersectionWithPlaneRayLength(
+                         camera, ray, offset + plane_distances[i][j], plane_normals[i]);
+
+        if (length > 0 && length < min_length_local)
+          min_length_local = length;
+      }
+
+      if (min_length_local < std::numeric_limits<float>::max() - constants::presision &&
+          min_length_local < min_length) {
+
+        QVector3D p(m_squares[k]->getLocalTransform().inverted() * QVector4D(camera + min_length_local * ray, 1.0));
+
+        if (p.z() >= 0 - constants::presision && p.z() <= constants::height + constants::presision &&
+            -p.y() >= -constants::size/2 - constants::presision && -p.y() <= constants::size/2 + constants::presision &&
+            p.x() >= -constants::size/2 - constants::presision && p.x() <= constants::size/2 + constants::presision) {
+
+          min_length = min_length_local;
+          index = static_cast<int>(k);
+        }
+      }
+    }
+  }
+
+  return index;
 }
 
 
@@ -158,56 +203,23 @@ QVector3D FieldModel::calculateRay(int screen_x, int screen_y, int width, int he
   ray_eye.setW(0.0f); // direction vector
 
 
-  QVector3D ray_world(m_view->inverted() * ray_eye);
-  ray_world.normalize();
+  QVector3D ray(m_model->inverted() * m_view->inverted() * ray_eye);
+  ray.normalize();
 
 
-  return ray_world;
+  return ray;
 }
 
 
-bool FieldModel::trySetIntersectionWithPlaneXY(QVector3D ray_world, float plane_z, float& res_x, float& res_y) {
-  // find ray intersection coordinates with squares plane in world space
-  QVector3D camera(m_view->inverted() * QVector3D());
+float FieldModel::calculateIntersectionWithPlaneRayLength(
+    QVector3D camera, QVector3D ray, float plane_distance, QVector3D plane_normal) {
 
-  QVector3D plane_normal(0.0f, 0.0f, 1.0f);
+  float dot_plane_ray = QVector3D::dotProduct(ray, plane_normal);
+  if (std::abs(dot_plane_ray) < constants::presision) return -1.0f; // ray parallel to plane
+  float length = (plane_distance - QVector3D::dotProduct(camera, plane_normal)) / dot_plane_ray;
 
-  float dot_plane_ray = QVector3D::dotProduct(ray_world, plane_normal);
-  if (std::abs(dot_plane_ray) < 0.001f) return false; // ray parallel to plane
-  float length = (plane_z - QVector3D::dotProduct(camera, plane_normal)) / dot_plane_ray;
-  if (length < 0) return false; // intersection behind camera
+  if (length < 0) return -1.0f; // intersection behind camera
 
-  QVector4D intersection_coords(camera + length * ray_world, 1.0f);
-
-
-  // put top left corner of top left square in (0, 0)
-  // size and margin of squares become equal to the ones defined in constexpressions
-  intersection_coords = m_model->inverted() * intersection_coords;
-
-  QMatrix4x4 flip_y;
-  flip_y.scale(1.0, -1.0);
-  intersection_coords = flip_y * intersection_coords;
-
-  res_x = intersection_coords.x();
-  res_y = intersection_coords.y();
-  return true;
-}
-
-
-// checks if (x, y) coordinates belong to any square and gets that square (i, j) if they do
-bool  FieldModel::trySetSquareIJ(float x, float y, int& res_i, int& res_j) {
-  float mrg = constants::margin;
-  float step = constants::step;
-
-  int j = static_cast<int>(x/step);
-  int i = static_cast<int>(y/step);
-
-  if (x < 0 || y < 0 || x > m_dim_x*step || y > m_dim_y*step) return false; // not in squares area
-  if ((j+1)*step - x < mrg || (i+1)*step - y < mrg) return false; // between squares
-
-
-  res_i = i;
-  res_j = j;
-  return true;
+  return length;
 }
 // ----------------------RayCasting----------------------

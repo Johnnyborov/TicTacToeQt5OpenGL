@@ -28,6 +28,10 @@ void Square::setLocalTransform(QMatrix4x4 local) {
 }
 
 
+QMatrix4x4 Square::getLocalTransform() {
+  return m_local * m_z;
+}
+
 void Square::setStatus(Statuses status) {
   m_z.setToIdentity();
 

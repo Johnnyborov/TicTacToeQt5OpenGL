@@ -12,14 +12,16 @@
 
 class QOpenGLShaderProgram;
 
+
 enum class Statuses : unsigned char { Normal, Pressed, WinChain };
+
 
 class Square : protected QOpenGLFunctions {
 public:
   Square(Mesh* mesh, std::vector<std::unique_ptr<QOpenGLTexture>>* textures, QOpenGLShaderProgram* program, QMatrix4x4* world);
 
   void draw();
-  void setLocalTransform(QMatrix4x4 local);
+  void setLocalTransform(const QMatrix4x4& local);
   QMatrix4x4 getLocalTransform();
   void setStatus(Statuses status);
   void setType(SquareTypes type);

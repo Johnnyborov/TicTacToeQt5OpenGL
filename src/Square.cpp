@@ -23,7 +23,7 @@ void Square::draw() {
 }
 
 
-void Square::setLocalTransform(QMatrix4x4 local) {
+void Square::setLocalTransform(const QMatrix4x4& local) {
   m_local = local;
 }
 
@@ -36,7 +36,7 @@ void Square::setStatus(Statuses status) {
   m_z.setToIdentity();
 
   if (status == Statuses::Pressed) {
-    m_z.translate(0.0, 0.0, -0.33);
+    m_z.translate(0.0f, 0.0f, -0.33f);
   } else if (status == Statuses::WinChain) {
     m_is_chain_member = true;
   }

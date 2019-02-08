@@ -11,6 +11,7 @@
 class QMouseEvent;
 class QKeyEvent;
 
+
 class FieldWidget : public QOpenGLWidget, protected QOpenGLFunctions {
   Q_OBJECT
 
@@ -21,13 +22,13 @@ public:
   QSize minimumSizeHint() const override;
 
 public slots:
-  void newGame(int dim_x, int dim_y, int win_size);
-  void setSquare(int i, SquareTypes type);
+  void newGame(unsigned dim_x, unsigned dim_y, unsigned win_size);
+  void setSquare(unsigned i, SquareTypes type);
   void finishGame(Conditions conditions);
 
 signals:
   void glInitialized();
-  void squareClicked(int i);
+  void squareClicked(unsigned i);
 
 protected:
   void initializeGL() override;

@@ -36,11 +36,13 @@ void FieldWidget::initializeGL() {
   m_program.setUniformValue("texture0", 0);
   m_program.setUniformValue("texture1", 1);
 
+
   m_angle_x = 0;
   m_angle_z = 0;
-  m_view.translate(0.0, 0.0, -4.7);
+
+  m_view.setToIdentity();
+  m_view.lookAt(QVector3D(0.0, 0.0, 5.0), QVector3D(0.0, 0.0, 0.0), QVector3D(0.0, 1.0, 0.0));
   m_view.rotate(m_angle_x, 1.0, 0.0, 0.0);
-  m_view.translate(0.0, 0.0, -0.3);
   m_view.rotate(m_angle_z, 0.0, 0.0, 1.0);
   m_program.setUniformValue("view", m_view);
   m_program.setUniformValue("view_inverted", m_view.inverted());
@@ -79,7 +81,7 @@ void FieldWidget::createProgram() {
 }
 
 
-void FieldWidget::newGame(int dim_x, int dim_y, int win_size) {
+void FieldWidget::newGame(unsigned dim_x, unsigned dim_y, unsigned win_size) {
   m_field.newGame(dim_x, dim_y, win_size);
 
   update();
@@ -88,7 +90,7 @@ void FieldWidget::newGame(int dim_x, int dim_y, int win_size) {
 }
 
 
-void FieldWidget::setSquare(int i, SquareTypes type) {
+void FieldWidget::setSquare(unsigned i, SquareTypes type) {
   m_field.setSquare(i, type);
 
   update();
@@ -106,7 +108,7 @@ void FieldWidget::mousePressEvent(QMouseEvent* event) {
 
   if (i == -1) return;
 
-  m_field.press(i);
+  m_field.press(static_cast<unsigned>(i));
   m_last_pressed = i;
 
   update();
@@ -118,11 +120,11 @@ void FieldWidget::mouseReleaseEvent(QMouseEvent* event) {
 
   int i = m_field.getSquareUnderMouse(event->x(), event->y(), width(), height());
 
-  m_field.release(m_last_pressed);
+  m_field.release(static_cast<unsigned>(m_last_pressed));
 
 
   if (i == m_last_pressed) {
-    emit squareClicked(i);
+    emit squareClicked(static_cast<unsigned>(i));
   }
 
   m_last_pressed = -1;
@@ -141,9 +143,9 @@ void FieldWidget::keyPressEvent(QKeyEvent* event) {
   }  else if (event->key() == Qt::Key::Key_Right) {
     m_angle_z -= 5;
   } else if (event->key() == Qt::Key::Key_Plus) {
-    m_fov -= 5.0;
+    m_fov -= 5;
   }  else if (event->key() == Qt::Key::Key_Minus) {
-    m_fov += 5.0;
+    m_fov += 5;
   } else {
     QWidget::keyPressEvent(event);
   }
@@ -157,10 +159,10 @@ void FieldWidget::keyPressEvent(QKeyEvent* event) {
   if (m_fov > 176) m_fov = 175;
 
 
+
   m_view.setToIdentity();
-  m_view.translate(0.0, 0.0, -4.7);
+  m_view.lookAt(QVector3D(0.0, 0.0, 5.0), QVector3D(0.0, 0.0, 0.0), QVector3D(0.0, 1.0, 0.0));
   m_view.rotate(m_angle_x, 1.0, 0.0, 0.0);
-  m_view.translate(0.0, 0.0, -0.3);
   m_view.rotate(m_angle_z, 0.0, 0.0, 1.0);
 
   float aspect = float(width()) / height();
@@ -168,9 +170,11 @@ void FieldWidget::keyPressEvent(QKeyEvent* event) {
   m_projection.setToIdentity();
   m_projection.perspective(m_fov, aspect, zNear, zFar);
 
+
   m_program.bind();
   m_program.setUniformValue("view", m_view);
   m_program.setUniformValue("view_inverted", m_view.inverted());
   m_program.setUniformValue("projection", m_projection);
+
   update();
 }

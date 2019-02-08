@@ -5,7 +5,7 @@ GameEngine::GameEngine() {
 }
 
 
-void GameEngine::newGame(int dim_x, int dim_y, int win_size) {
+void GameEngine::newGame(unsigned dim_x, unsigned dim_y, unsigned win_size) {
   m_dim_x = dim_x;
   m_dim_y = dim_y;
   m_win_size = win_size;
@@ -18,7 +18,7 @@ void GameEngine::newGame(int dim_x, int dim_y, int win_size) {
 }
 
 
-void GameEngine::makeMove(int i) {
+void GameEngine::makeMove(unsigned i) {
   if (m_over || m_squares[i] != SquareTypes::Clear) return;
 
   SquareTypes new_type;
@@ -55,14 +55,14 @@ WinTypes GameEngine::calculateWinner() {
 // for every valid starting point on the field
 void GameEngine::checkGame() {
   // check rows
-  for (int i = 0; i < m_dim_y; ++i) {
-    for (int j = 0; j < m_dim_x - m_win_size + 1; ++j) {
+  for (unsigned i = 0; i < m_dim_y; ++i) {
+    for (unsigned j = 0; j < m_dim_x - m_win_size + 1; ++j) {
 
       SquareTypes start = m_squares[i * m_dim_x + j];
       if (start != SquareTypes::Clear) {
 
         bool found_chain = true;
-        for (int k = 1; k < m_win_size; ++k) {
+        for (unsigned k = 1; k < m_win_size; ++k) {
           if (m_squares[i * m_dim_x + (j + k)] != start)
             found_chain = false;
         }
@@ -77,14 +77,14 @@ void GameEngine::checkGame() {
   }
 
   // check columns
-  for (int i = 0; i < m_dim_y - m_win_size + 1; ++i) {
-    for (int j = 0; j < m_dim_x; ++j) {
+  for (unsigned i = 0; i < m_dim_y - m_win_size + 1; ++i) {
+    for (unsigned j = 0; j < m_dim_x; ++j) {
 
       SquareTypes start = m_squares[i * m_dim_x + j];
       if (start != SquareTypes::Clear) {
 
         bool found_chain = true;
-        for (int k = 1; k < m_win_size; ++k) {
+        for (unsigned k = 1; k < m_win_size; ++k) {
           if (m_squares[(i + k) * m_dim_x + j] != start)
             found_chain = false;
         }
@@ -99,14 +99,14 @@ void GameEngine::checkGame() {
   }
 
   // check dioganal right+down
-  for (int i = 0; i < m_dim_y - m_win_size + 1; ++i) {
-    for (int j = 0; j < m_dim_x - m_win_size + 1; ++j) {
+  for (unsigned i = 0; i < m_dim_y - m_win_size + 1; ++i) {
+    for (unsigned j = 0; j < m_dim_x - m_win_size + 1; ++j) {
 
       SquareTypes start = m_squares[i * m_dim_x + j];
       if (start != SquareTypes::Clear) {
 
         bool found_chain = true;
-        for (int k = 1; k < m_win_size; ++k) {
+        for (unsigned k = 1; k < m_win_size; ++k) {
           if (m_squares[(i + k) * m_dim_x + (j + k)] != start)
             found_chain = false;
         }
@@ -121,14 +121,14 @@ void GameEngine::checkGame() {
   }
 
   // check dioganal left+down
-  for (int i = 0; i < m_dim_y - m_win_size + 1; ++i) {
-    for (int j = m_win_size - 1; j < m_dim_x; ++j) {
+  for (unsigned i = 0; i < m_dim_y - m_win_size + 1; ++i) {
+    for (unsigned j = m_win_size - 1; j < m_dim_x; ++j) {
 
       SquareTypes start = m_squares[i * m_dim_x + j];
       if (start != SquareTypes::Clear) {
 
         bool found_chain = true;
-        for (int k = 1; k < m_win_size; ++k) {
+        for (unsigned k = 1; k < m_win_size; ++k) {
           if (m_squares[(i + k) * m_dim_x + (j - k)] != start)
             found_chain = false;
         }
@@ -144,7 +144,7 @@ void GameEngine::checkGame() {
 
   if (m_count == m_dim_x * m_dim_y) {
     m_over = true;
-    m_over_conditions = Conditions{ WinTypes::Draw, Directions::None, -1, -1 };
+    m_over_conditions = Conditions{ WinTypes::Draw, Directions::None, 0, 0 };
     return;
   }
 }

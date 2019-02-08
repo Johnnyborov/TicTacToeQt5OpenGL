@@ -9,6 +9,7 @@ class FieldWidget;
 class QPushButton;
 class QSpinBox;
 
+
 class GameWindow : public QWidget {
   Q_OBJECT
 

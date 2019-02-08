@@ -4,17 +4,18 @@
 #include <QObject>
 #include <vector>
 
-enum class SquareTypes : unsigned char { Clear = 0, Cross, Nought };
 
+enum class SquareTypes : unsigned char { Clear = 0, Cross, Nought };
 enum class WinTypes: unsigned char { Crosses, Noughts, Draw };
 enum class Directions: unsigned char { Right, Down, RightDown, LeftDown, None };
 
 struct Conditions {
   WinTypes win_type;
   Directions direction;
-  int start_i;
-  int start_j;
+  unsigned start_i;
+  unsigned start_j;
 };
+
 
 class GameEngine: public QObject {
   Q_OBJECT
@@ -23,25 +24,25 @@ public:
   GameEngine();
 
 public slots:
-  void newGame(int dim_x, int dim_y, int win_size);
-  void makeMove(int i);
+  void newGame(unsigned dim_x, unsigned dim_y, unsigned win_size);
+  void makeMove(unsigned i);
 
 signals:
-  void gameCreated(int dim_x, int dim_y, int win_size);
-  void moveMade(int i, SquareTypes type);
+  void gameCreated(unsigned dim_x, unsigned dim_y, unsigned win_size);
+  void moveMade(unsigned i, SquareTypes type);
   void gameOver(Conditions conditions);
 
 private:
   void checkGame();
   WinTypes calculateWinner();
 
-  int m_dim_x = 3;
-  int m_dim_y = 3;
-  int m_win_size = 3;
+  unsigned m_dim_x = 3;
+  unsigned m_dim_y = 3;
+  unsigned m_win_size = 3;
 
   std::vector<SquareTypes> m_squares;
 
-  int m_count = 0;
+  unsigned m_count = 0;
   bool m_over = false;
   Conditions m_over_conditions;
 };
